@@ -1,9 +1,12 @@
+import base64
 import binascii
+import codecs
 import random
 import secrets
 import hashlib
 import os
 import bcrypt
+
 
 class Random_generator:
 
@@ -16,22 +19,27 @@ class Random_generator:
         return ''.join(random.choice(alphabet) for i in range(length))
 
     # generates salt
-    def generate_salt(self, rounds=22):
-        first_phrase = ''.join(str(random.randint(0,9)) for i in range(rounds))
-        second_phase = '$2b$12$' + first_phrase
-        return second_phase.encode()
+    def generate_salt_bad(self, rounds=12):
+        salt = ''.join(str(random.randint(0,9)) for _ in range(21)) + '.'
+        return f'$2b${rounds}${salt}'.encode()
+
+    def generate_salt(self, rounds=12):
+        return bcrypt.gensalt(rounds)
+
 
 class SHA256_hasher:
 
     # produces the password hash by combining password + salt because hashing
     def password_hash(self, password, salt):
-        password = binascii.hexlify(hashlib.sha256(password.encode()).digest())
+        # password = binascii.hexlify(hashlib.sha256(password.encode()).digest())
+        password = password.encode('utf-8')
         password_hash = bcrypt.hashpw(password, salt)
         return password_hash.decode('ascii')
 
     # verifies that the hashed password reverses to the plain text version on verification
     def password_verification(self, password, password_hash):
-        password = binascii.hexlify(hashlib.sha256(password.encode()).digest())
+        # password = binascii.hexlify(hashlib.sha256(password.encode()).digest())
+        password = password.encode('utf-8')
         password_hash = password_hash.encode('ascii')
         return bcrypt.checkpw(password, password_hash)
 
